@@ -13,7 +13,7 @@
 #' @export
 #'
 #' @examples
-complex.heterogeneity <- function(y, s, a, W.mat, type = "model", variance = FALSE, test = FALSE, W.grid = NULL, grid.size = 4) {
+complex.heterogeneity <- function(y, s, a, W.mat, type = "model", variance = FALSE, test = FALSE, W.grid = NULL, grid.size = 4, threshold, h.0,h.1,h.3) {
   # create dataframe for control and treat
   W.mat.control <- W.mat[a==0,]
   W.mat.treat <- W.mat[a==1,]
@@ -42,15 +42,23 @@ complex.heterogeneity <- function(y, s, a, W.mat, type = "model", variance = FAL
   W.grid.expand <- expand.grid(split(W.grid, rep(1:ncol(W.grid), each = nrow(W.grid))))
 
   if (type == "model") {
-    return.grid <- parametric.est(data.control, data.treat, W.grid.expand)
-  } else if (type == "two step") {
-    return.grid <- two.step.est(data.control, data.treat, W.grid.expand)
+    return.grid.p <- parametric.est(data.control, data.treat, W.grid.expand)
+    return.grid = return.grid.p
   }
-  if (variance == TRUE) {
-    return.grid <- cbind(return.grid, boot.var(data.control, data.treat, W.grid.expand, type))
+  if (type == "two step") {
+    return.grid.t <- two.step.est(data.control, data.treat, W.grid.expand,h.0=h.0,h.1=h.1,h.3=h.3)
+    return.grid = return.grid.t
   }
-  if (test == TRUE) {
-    return.grid <- list(return.grid = return.grid, pval = het.test(data.all, type, num.cov))
+  if (type == "both") {
+    return.grid.p <- parametric.est(data.control, data.treat, W.grid.expand)
+    return.grid.t <- two.step.est(data.control, data.treat, W.grid.expand,h.0=h.0,h.1=h.1,h.3=h.3)
+    return.grid = cbind(return.grid.p,return.grid.t)
   }
+  if (variance == TRUE | test == TRUE) {
+  	boot.object = boot.var(data.control, data.treat, W.grid.expand, type,test=test, data.all = data.all, num.cov = num.cov, results.for.test = return.grid, threshold = threshold,h.0=h.0,h.1=h.1,h.3=h.3)
+    return.grid <- cbind(return.grid, boot.object$my.grid)
+    return.grid <- list(return.grid = return.grid, pval = boot.object$pval)
+  }
+  else {return.grid <- list(return.grid = return.grid)}
   return(return.grid)
 }
