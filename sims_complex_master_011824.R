@@ -1,7 +1,7 @@
 
 #only touch this!!!
 
-setting = 5
+setting = 4
 threshold= 0.70 
 n <- 1000 #sample size for each group
 
@@ -213,9 +213,8 @@ get.parameters = function(setting){
 		beta3 = 6
 		beta4 = c(1,1)
 		beta5 = c(4,5)
-		beta6=0.1
 		sd.y = 6
-		return(list("mean.w1" = mean.w1, "sd.w1" = sd.w1, "mean.w2" = mean.w2, "sd.w2" = sd.w2, "s.mean.control" = s.mean.control, "s.mean.treat" = s.mean.treat, "s.sd.control" = s.sd.control, "s.sd.treat" = s.sd.treat,"beta0"=beta0,"beta1"=beta1, "beta2"=beta2,"beta3"=beta3, "beta4"=beta4, "beta5"=beta5, "beta6"=beta6, "sd.y"=sd.y))
+		return(list("mean.w1" = mean.w1, "sd.w1" = sd.w1, "mean.w2" = mean.w2, "sd.w2" = sd.w2, "s.mean.control" = s.mean.control, "s.mean.treat" = s.mean.treat, "s.sd.control" = s.sd.control, "s.sd.treat" = s.sd.treat,"beta0"=beta0,"beta1"=beta1, "beta2"=beta2,"beta3"=beta3, "beta4"=beta4, "beta5"=beta5, "sd.y"=sd.y))
 	}
 	if(setting ==4){
 		mean.w1 = 2
@@ -232,75 +231,55 @@ get.parameters = function(setting){
 		beta3 = 5
 		beta4 = c(1,1)
 		beta5 = c(0,0)
-		beta6=0.1
 		sd.y = 6
-		return(list("mean.w1" = mean.w1, "sd.w1" = sd.w1, "mean.w2" = mean.w2, "sd.w2" = sd.w2, "s.mean.control" = s.mean.control, "s.mean.treat" = s.mean.treat, "s.sd.control" = s.sd.control, "s.sd.treat" = s.sd.treat,"beta0"=beta0,"beta1"=beta1, "beta2"=beta2,"beta3"=beta3, "beta4"=beta4, "beta5"=beta5, "beta6"=beta6, "sd.y"=sd.y))
+		return(list("mean.w1" = mean.w1, "sd.w1" = sd.w1, "mean.w2" = mean.w2, "sd.w2" = sd.w2, "s.mean.control" = s.mean.control, "s.mean.treat" = s.mean.treat, "s.sd.control" = s.sd.control, "s.sd.treat" = s.sd.treat,"beta0"=beta0,"beta1"=beta1, "beta2"=beta2,"beta3"=beta3, "beta4"=beta4, "beta5"=beta5, "sd.y"=sd.y))
 	}
 
 
 
 
 }
+
 
 get.truth = function(setting, grid){
-	if(setting ==1){
-		params = get.parameters(setting=1)
-		delta.s = params$beta1+params$beta3*params$s.mean.control + grid%*%params$beta5
-		delta = params$beta1+(params$beta2+params$beta3)*(params$s.mean.treat) - (params$beta2)*(params$s.mean.control) + grid%*%params$beta5
-		R = 1-delta.s/delta
-		return(list("delta.s" = delta.s, "delta" = delta, "R" = R))
-	}
-	if(setting ==2){
-		params = get.parameters(setting=2)
-		delta.s = params$beta1+params$beta3*params$s.mean.control+ grid%*%params$beta5
-		delta = params$beta1+(params$beta2+params$beta3)*(params$s.mean.treat) - (params$beta2)*(params$s.mean.control) + grid%*%params$beta5
-		R = 1-delta.s/delta
-		return(list("delta.s" = delta.s, "delta" = delta, "R" = R))
-	}
-if(setting ==3){
-		#doing a large sample approx to truth
-		params = get.parameters(setting=3)
-		l.grid = dim(grid)[1]
-		delta = vector(length = l.grid)
-		delta.s = vector(length = l.grid)
-		n.true=100000
-		for(q in 1:l.grid) {
-		s.true.1 =exp(rnorm(n.true, params$s.mean.treat , params$s.sd.treat ))
-   	  	s.true.0 =exp(rnorm(n.true, params$s.mean.control , params$s.sd.control ))
-    	  	y.true.1 <- params$beta0 + params$beta1 + params$beta2 * s.true.1^2 + params$beta3 *  s.true.1 + as.numeric(grid[q,]%*%params$beta4) + as.numeric(grid[q,]%*%params$beta5)
-		y.true.0 <- params$beta0 + params$beta2 * s.true.0^2 + as.numeric(grid[q,]%*%params$beta4)
-  	  	y.true.1.0 <- params$beta0 + params$beta1 + params$beta2 * s.true.0^2 + params$beta3 *  s.true.0 + as.numeric(grid[q,]%*%params$beta4 + as.numeric(grid[q,]%*%params$beta5))
-
-		delta[q] = mean(y.true.1) - mean(y.true.0)
-  	  	delta.s[q] = mean(y.true.1.0) - mean(y.true.0)
-		}
-		R = 1-delta.s/delta
-		return(list("delta.s" = delta.s, "delta" = delta, "R" = R))
-	}
-
-	#no heterogeneity, model mis-specificaiton in s
-	if(setting ==4){
-		#doing a large sample approx to truth
-		params = get.parameters(setting=4)
-		l.grid = dim(grid)[1]
-		delta = vector(length = l.grid)
-		delta.s = vector(length = l.grid)
-		n.true=100000
-		for(q in 1:l.grid) {
-		s.true.1 =exp(rnorm(n.true, params$s.mean.treat , params$s.sd.treat ))
-   	  	s.true.0 =exp(rnorm(n.true, params$s.mean.control , params$s.sd.control ))
-   	  	y.true.1 <- params$beta0 + params$beta1 + params$beta2 * s.true.1^2 + params$beta3 *  s.true.1 + as.numeric(grid[q,]%*%params$beta4)
-		y.true.0 <- params$beta0 + params$beta2 * s.true.0^2 + as.numeric(grid[q,]%*%params$beta4)
-  	  	y.true.1.0 <- params$beta0 + params$beta1 + params$beta2 * s.true.0^2 + params$beta3 *  s.true.0 + as.numeric(grid[q,]%*%params$beta4)
-
-		delta[q] = mean(y.true.1) - mean(y.true.0)
-  	  	delta.s[q] = mean(y.true.1.0) - mean(y.true.0)
-		}
-		R = 1-delta.s/delta
-		return(list("delta.s" = delta.s, "delta" = delta, "R" = R))
-	}
-
+  if(setting ==1){
+    params = get.parameters(setting=1)
+    delta.s = params$beta1+params$beta3*params$s.mean.control + grid%*%params$beta5
+    delta = params$beta1+(params$beta2+params$beta3)*(params$s.mean.treat) - (params$beta2)*(params$s.mean.control) + grid%*%params$beta5
+    R = 1-delta.s/delta
+    return(list("delta.s" = delta.s, "delta" = delta, "R" = R))
+  }
+  if(setting ==2){
+    params = get.parameters(setting=2)
+    delta.s = params$beta1+params$beta3*params$s.mean.control+ grid%*%params$beta5
+    delta = params$beta1+(params$beta2+params$beta3)*(params$s.mean.treat) - (params$beta2)*(params$s.mean.control) + grid%*%params$beta5
+    R = 1-delta.s/delta
+    return(list("delta.s" = delta.s, "delta" = delta, "R" = R))
+  }
+  if(setting ==3){
+    params = get.parameters(setting=3)
+    delta.s = params$beta1 + params$beta3*(exp(params$s.mean.control + 0.5*params$s.sd.control^2)) + grid%*%params$beta5
+    # calculate E(s^2) for the treat and control groups based on lognormal distribution
+    e.s1.2 = (exp(params$s.mean.treat + 0.5*params$s.sd.treat^2))^2 + (exp(params$s.sd.treat^2)-1)*exp(2*params$s.mean.treat + params$s.sd.treat^2)
+    e.s0.2 = (exp(params$s.mean.control + 0.5*params$s.sd.control^2))^2 + (exp(params$s.sd.control^2)-1)*exp(2*params$s.mean.control + params$s.sd.control^2)
+    delta = params$beta1 + params$beta2*(e.s1.2 - e.s0.2) + params$beta3*(exp(params$s.mean.treat + 0.5*params$s.sd.treat^2)) + grid%*%params$beta5
+    R = 1-delta.s/delta
+    return(list("delta.s" = delta.s, "delta" = delta, "R" = R))
+  }
+  
+  if(setting ==4){
+    params = get.parameters(setting=4)
+    delta.s = params$beta1 + params$beta3*(exp(params$s.mean.control + 0.5*params$s.sd.control^2)) + grid%*%params$beta5
+    # calculate E(s^2) for the treat and control groups based on lognormal distribution
+    e.s1.2 = (exp(params$s.mean.treat + 0.5*params$s.sd.treat^2))^2 + (exp(params$s.sd.treat^2)-1)*exp(2*params$s.mean.treat + params$s.sd.treat^2)
+    e.s0.2 = (exp(params$s.mean.control + 0.5*params$s.sd.control^2))^2 + (exp(params$s.sd.control^2)-1)*exp(2*params$s.mean.control + params$s.sd.control^2)
+    delta = params$beta1 + params$beta2*(e.s1.2 - e.s0.2) + params$beta3*(exp(params$s.mean.treat + 0.5*params$s.sd.treat^2)) + grid%*%params$beta5
+    R = 1-delta.s/delta
+    return(list("delta.s" = delta.s, "delta" = delta, "R" = R))
+  }
+  
 }
+
 
 gen.data = function(n,setting){
 	params = get.parameters(setting=setting)
