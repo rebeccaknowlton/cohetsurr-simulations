@@ -1,4 +1,6 @@
+# also need to run functions in the sims_complex_master file
 
+kernel <- function(x, h) { return(dnorm(x / h)) }
 
 mse.BW <- function(data, h)
 {	folds = 10
@@ -53,6 +55,9 @@ opt = optimize(f = mse.BW.s, data=data,lower =bw.nrd(data$S)/10, upper = bw.nrd(
 
 
 #generate big dataset to get bandwidth
+setting = 4
+grid.size = 4
+n = 1000
 params = get.parameters(setting=setting)
 set.seed(1)
 
@@ -60,59 +65,54 @@ if(setting == 1 | setting == 2 | setting == 3| setting == 4){
 	w1.large <- runif(10000, params$mean.w1, params$sd.w1)
 	w2.large <- runif(10000, params$mean.w2, params$sd.w2)
 }
-if(setting == 3){
-	w1.large = rgamma(10000, params$w.1.1, params$w.1.2)
-	w2.large = rnorm(10000, params$w.2.1, params$w.2.2)
-	}
 
 w1.grd <- seq(quantile(w1.large, 0.2), quantile(w1.large, 0.8), length = grid.size)
 w2.grd <- seq(quantile(w2.large, 0.2), quantile(w2.large, 0.8), length = grid.size)
 w1w2.grid <- matrix(cbind(w1.grd, w2.grd),ncol=2)
-	colnames(w1w2.grid) <- c("W1", "W2")
+colnames(w1w2.grid) <- c("W1", "W2")
 W.grid = w1w2.grid
 
- # expand W.grid
-  W.grid.expand <- expand.grid(split(W.grid, rep(1:ncol(W.grid), each = nrow(W.grid))))
+# expand W.grid
+W.grid.expand <- expand.grid(split(W.grid, rep(1:ncol(W.grid), each = nrow(W.grid))))
 
 data.temp = gen.data(n=n, setting =setting)
 y = data.temp$Y
 s = data.temp$S
 a = data.temp$A
 W.mat = matrix(cbind(data.temp$W1, data.temp$W2), ncol = 2)
-W.grid.expand <- expand.grid(split(W.grid, rep(1:ncol(W.grid), each = nrow(W.grid))))
 
 
 W.mat.control <- W.mat[a==0,]
-  W.mat.treat <- W.mat[a==1,]
-  covariates.control <- split(W.mat.control, rep(1:ncol(W.mat.control), each = nrow(W.mat.control)))
-  covariates.treat <- split(W.mat.treat, rep(1:ncol(W.mat.treat), each = nrow(W.mat.treat)))
-  data.control <- cbind(data.frame(Y = y[a==0], S = s[a==0]), covariates.control)
-  data.treat <- cbind(data.frame(Y = y[a==1], S = s[a==1]), covariates.treat)
-  data.control.true=data.control
-  data.treat.true=data.treat
+W.mat.treat <- W.mat[a==1,]
+covariates.control <- split(W.mat.control, rep(1:ncol(W.mat.control), each = nrow(W.mat.control)))
+covariates.treat <- split(W.mat.treat, rep(1:ncol(W.mat.treat), each = nrow(W.mat.treat)))
+data.control <- cbind(data.frame(Y = y[a==0], S = s[a==0]), covariates.control)
+data.treat <- cbind(data.frame(Y = y[a==1], S = s[a==1]), covariates.treat)
+data.control.true=data.control
+data.treat.true=data.treat
 
-  #create dataframe for combined data
-  covariates.all <- split(W.mat, rep(1:ncol(W.mat), each = nrow(W.mat)))
-  num.cov <- length(covariates.all)
-  data.all <- cbind(data.frame(Y = y, S = s, A = a), covariates.all)
-  for (i in 1:num.cov) {
-    names(data.all)[3+i] <- paste0("W",i)
-  }
+#create dataframe for combined data
+covariates.all <- split(W.mat, rep(1:ncol(W.mat), each = nrow(W.mat)))
+num.cov <- length(covariates.all)
+data.all <- cbind(data.frame(Y = y, S = s, A = a), covariates.all)
+for (i in 1:num.cov) {
+  names(data.all)[3+i] <- paste0("W",i)
+}
 
 
-  names(W.grid.expand) <- names(data.control)[3:ncol(data.control)]
+names(W.grid.expand) <- names(data.control)[3:ncol(data.control)]
 
-  working.model.control <- lm(Y ~ ., data = data.control)
-  working.model.treat <- lm(Y ~ ., data = data.treat)
+working.model.control <- lm(Y ~ ., data = data.control)
+working.model.treat <- lm(Y ~ ., data = data.treat)
   
-  data.control.pred = data.control
-  data.control.pred$S = mean(data.control$S)
-  data.treat.pred = data.treat
-  data.treat.pred$S = mean(data.control$S)
-  data.control$U.hat <- predict(working.model.treat, newdata= data.control.pred) - predict(working.model.control, newdata= data.control.pred) 
-  data.treat$U.hat <- predict(working.model.treat, newdata= data.treat.pred) - predict(working.model.control, newdata= data.treat.pred)
-  W.grid.expand$S = mean(data.control$S)
- W.grid.expand$U.hat <- predict(working.model.treat, newdata= W.grid.expand) - predict(working.model.control, newdata= W.grid.expand)
+data.control.pred = data.control
+data.control.pred$S = mean(data.all$S) 
+data.treat.pred = data.treat
+data.treat.pred$S = mean(data.all$S) 
+data.control$U.hat <- predict(working.model.treat, newdata= data.control.pred) - predict(working.model.control, newdata= data.control.pred) 
+data.treat$U.hat <- predict(working.model.treat, newdata= data.treat.pred) - predict(working.model.control, newdata= data.treat.pred)
+W.grid.expand$S = mean(data.all$S)
+W.grid.expand$U.hat <- predict(working.model.treat, newdata= W.grid.expand) - predict(working.model.control, newdata= W.grid.expand)
 
 set.seed(1)
 
