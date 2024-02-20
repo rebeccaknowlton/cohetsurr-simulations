@@ -2,7 +2,8 @@
 #run all the functions in the master file
 #set the working directory to where the txt files are
 
-setwd("/Users/parastlm/Downloads")
+setwd("C:/Users/rkkno/Documents/University of Texas at Austin/Complex heterogeneity/output files/Setting 3")
+setting <- 3
 setting.parametric <- empty.sim
 setting.two.step <- empty.sim
 
@@ -22,6 +23,7 @@ apply(pfile, 2, function(x) mean(x < 0.05))
 #two stage sup test
 
 #very important
+# set.seed(1) -- need this line if get.truth function uses random sampling 
 each.rows = grid.size*grid.size
 truth = get.truth(setting =setting, grid = cbind(outputfile[1:each.rows,1], outputfile[1:each.rows,2]))
 
@@ -71,34 +73,40 @@ for(i in 1:1000) {
 get.latex.tables(setting.parametric, setting.two.step, setting)
 
 
-###trying to look at identification of region of strong surrogacy 
+### trying to look at identification of region of strong surrogacy 
+
+# unadjusted parametric
 apply(setting.parametric$pval.threshold, 2, function(x) mean(x<0.05))
 #for how many of the 1000, is at least 1 w gridpoint flagged as in the region?
 mean(apply(setting.parametric$pval.threshold, 1, function(x) 1*(sum(x<0.05) >=1)))
 
-
-bh.p = c()
-for(jj in 1:dim(setting.parametric$pval.threshold)[1]){
-	data.sub = cbind(c(1:dim(setting.parametric$pval.threshold)[2]), t(setting.parametric$pval.threshold[jj,]))
-	data.new = data.sub[order(data.sub[,2]),]
-	new.reject = cbind(data.new,1*(data.new[,2] <= c(1:length(data.sub[,2]))/16*0.05))
-	bh.p = rbind(bh.p, t(new.reject[order(new.reject[,1]),3]))
-}
-apply(bh.p, 2, mean)
-
-mean(apply(bh.p, 1, function(x) 1*(sum(x) >=1)))
-
+# unadjusted two step
 apply(setting.two.step$pval.threshold, 2, function(x) mean(x<0.05))
 mean(apply(setting.two.step$pval.threshold, 1, function(x) 1*(sum(x<0.05) >=1)))
 
-bh.p = c()
-for(jj in 1:dim(setting.two.step$pval.threshold)[1]){
-	data.sub = cbind(c(1:dim(setting.two.step$pval.threshold)[2]), t(setting.two.step$pval.threshold[jj,]))
-	data.new = data.sub[order(data.sub[,2]),]
-	new.reject = cbind(data.new,1*(data.new[,2] <= c(1:length(data.sub[,2]))/16*0.05))
-	bh.p = rbind(bh.p, t(new.reject[order(new.reject[,1]),3]))
+# adjusted parametric
+pval.adj.p <- matrix(nrow = dim(setting.parametric$pval.threshold)[1], ncol = grid.size * grid.size)
+for (jj in 1:dim(setting.parametric$pval.threshold)[1]) {
+   data.sub <- setting.parametric$pval.threshold[jj,]
+   ranks <- rank(data.sub, ties.method = "last")
+   p.m.over.k <- data.sub * length(data.sub) / ranks
+   for (r in 1:length(ranks)) {
+     tmp.rank <- ranks[r]
+     pval.adj.p[jj,r] <- min(1, min(p.m.over.k[ranks >= tmp.rank]))
+   }
 }
-apply(bh.p, 2, mean)
- mean(apply(bh.p, 1, function(x) 1*(sum(x) >=1)))
+colMeans(pval.adj.p < 0.05)
 
+# two step
+pval.adj.ts <- matrix(nrow = dim(setting.two.step$pval.threshold)[1], ncol = grid.size * grid.size)
+for (jj in 1:dim(setting.two.step$pval.threshold)[1]) {
+  data.sub <- setting.two.step$pval.threshold[jj,]
+  ranks <- rank(data.sub, ties.method = "last")
+  p.m.over.k <- data.sub * length(data.sub) / ranks
+  for (r in 1:length(ranks)) {
+    tmp.rank <- ranks[r]
+    pval.adj.ts[jj,r] <- min(1, min(p.m.over.k[ranks >= tmp.rank]))
+  }
+}
+colMeans(pval.adj.ts < 0.05)
 
