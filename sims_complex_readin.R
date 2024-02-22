@@ -2,7 +2,7 @@
 #run all the functions in the master file
 #set the working directory to where the txt files are
 
-setwd("C:/Users/rkkno/Documents/University of Texas at Austin/Complex heterogeneity/output files/Setting 3")
+setwd("C:/Users/rkkno/Documents/University of Texas at Austin/Complex heterogeneity/output files/Setting 1")
 setting <- 3
 setting.parametric <- empty.sim
 setting.two.step <- empty.sim
@@ -109,4 +109,54 @@ for (jj in 1:dim(setting.two.step$pval.threshold)[1]) {
   }
 }
 colMeans(pval.adj.ts < 0.05)
+
+### plot for ID'ing a region
+
+library(ggplot2)
+
+W.grid.expand = cbind(outputfile[1:each.rows,1], outputfile[1:each.rows,2])
+
+plot.data = as.data.frame(cbind(W.grid.expand, truth$R))
+names(plot.data) = c("W1","W2","R.true")
+plot.data$flag.true <- as.factor(1*(plot.data$R.true>threshold))
+
+min.z= 0.6
+max.z = 0.75
+
+# Heatmap of true R
+p.1 = ggplot(plot.data, aes(W1, W2, fill= R.true)) + 
+  geom_tile() +
+  scale_fill_gradient(low="yellow", high="red", limits = c(min.z,max.z)) + 
+  xlab("W1") +
+  ylab("W2") + 
+  labs(fill = expression(paste(R[S], "(W)",sep="")), title = expression("Setting 1, True R", paste(R[S], "(W)",sep="")))
+# Heatmap where true R > threshold
+p.2 = ggplot(plot.data, aes(W1, W2, fill = flag.true)) + 
+  geom_tile()+ 
+  scale_fill_manual(breaks = levels(plot.data$flag.true), values = c("light grey","red"), labels = c("Not in region", "In region")) +
+  labs(fill = paste("R >", threshold,sep=""), title = paste("Setting 1, True Region R >", threshold,sep=""))
+
+plot.data$R.est.p <- colMeans(setting.parametric$R.s)
+plot.data$R.est.ts <- colMeans(setting.two.step$R.s)
+
+p.3 = ggplot(plot.data, aes(W1, W2, fill= R.est.p)) + 
+  geom_tile() + scale_fill_gradient(low="yellow", high="red", limits = c(min.z,max.z)) + xlab("W1") + ylab("W2") + labs(fill = expression(paste(R[S], "(W)",sep="")), title = expression("Setting 1, Estimated R (Parametric)", paste(R[S], "(W)",sep="")))
+
+plot.data$flag.p <- colMeans(pval.adj.p < 0.05)
+plot.data$flag.ts <- colMeans(pval.adj.ts < 0.05)
+
+p.4 = ggplot(plot.data, aes(W1, W2, fill = flag.p)) +
+  geom_tile()+ scale_fill_gradient(low="lightgray", high="red", limits = c(0,1)) +
+  xlab("W1") + ylab("W2") + labs(fill = expression(paste(R[S], "(W)",sep="")), title = expression("Setting 1, Confidence Region R (Parametric) > ", threshold, sep=""))
+    
+library(gridExtra)
+grid.arrange(p.1,p.2,p.3,p.4, ncol = 2)
+
+p.5 = ggplot(plot.data, aes(W1, W2, fill= R.est.ts)) + 
+  geom_tile() + scale_fill_gradient(low="yellow", high="red", limits = c(min.z,max.z)) + xlab("W1") + ylab("W2") + labs(fill = expression(paste(R[S], "(W)",sep="")), title = expression("Setting 1, Estimated R (Two Step)", paste(R[S], "(W)",sep="")))
+p.6 = ggplot(plot.data, aes(W1, W2, fill = flag.ts)) +
+  geom_tile()+ scale_fill_gradient(low="lightgray", high="red", limits = c(0,0.5)) +
+  xlab("W1") + ylab("W2") + labs(fill = expression(paste(R[S], "(W)",sep="")), title = expression("Setting 1, Confidence Region R (Two Step) > ", threshold, sep=""))
+
+grid.arrange(p.1,p.2,p.5,p.6, ncol = 2)
 
