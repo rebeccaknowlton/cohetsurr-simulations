@@ -145,7 +145,7 @@ p.2 = ggplot(data.sub, aes(W1, W2, fill = flag)) +
   scale_fill_manual(breaks = levels(data.sub$flag), values = c("light grey","red"), labels = c("Not in region", "In region")) +
   labs(fill = paste("R >", threshold,sep=""), title = paste("Setting 1, True Region R >", threshold,sep=""))
 
-set.seed(6)
+set.seed(1)
 n = 1000
 data.temp = gen.data(n=n, setting =setting)
 # run one iteration of the simulations here --> set bandwidths in the master file!
@@ -153,7 +153,7 @@ func.output <- complex.heterogeneity(y = data.temp$Y,
                                      s = data.temp$S,
                                      a = data.temp$A,
                                      W.mat = matrix(cbind(data.temp$W1, data.temp$W2), ncol = 2),
-                                     type = "model",
+                                     type = "both",
                                      variance = TRUE,
                                      test = TRUE,
                                      W.grid = w1w2.grid, threshold=threshold, h.0=h.0,h.1=h.1,h.3=h.3)
@@ -170,88 +170,47 @@ max.z <- max(data$R)
 p.3 = ggplot(data.sub, aes(W1, W2, fill= R)) + 
   geom_tile() + scale_fill_gradient(low="yellow", high="red", limits = c(min.z,max.z)) + xlab("W1") + ylab("W2") + labs(fill = expression(paste(R[S], "(W)",sep="")), title = expression("Setting 1, Estimated R", paste(R[S], "(W)",sep="")))
 
-#THIS IS WRONG, IT SHOULD BE p<0.05, but none are significant right now, I don't know why  
-data.sub$flag = as.factor(1*(return.grid$pval.threshold<0.05))
+# adjust p values
+pval.adj <- rep(NA, 100)
+ranks <- rank(return.grid$pval.threshold, ties.method = "last")
+p.m.over.k <- return.grid$pval.threshold * length(return.grid$pval.threshold) / ranks
+for (r in 1:length(ranks)) {
+  tmp.rank <- ranks[r]
+  pval.adj[r] <- min(1, min(p.m.over.k[ranks >= tmp.rank]))
+}
+return.grid$pval.adj = pval.adj
+data.sub$flag = as.factor(1*(return.grid$pval.adj<0.05))
+
 
 p.4 = ggplot(data.sub, aes(W1, W2, fill = flag)) + geom_tile()+ scale_fill_manual(breaks = levels(as.factor(data.sub$flag)), values = c("light grey","red"), labels = c("Not in region", "In region")) + labs(fill = paste("R > ",threshold,sep=""), title = paste("Setting 1, Confidence Region R > ", threshold,sep=""))
 
- library(gridExtra)
-  grid.arrange(p.1,p.2,p.3,p.4, ncol = 2)
+library(gridExtra)
+# parametric
+grid.arrange(p.1,p.2,p.3,p.4, ncol = 2)
 
+# two step
+data = as.data.frame(cbind(W.grid.expand, return.grid$R.s.two.step))
+names(data) = c("W1","W2","R")
+data.sub=data
+min.z <- min(data$R)
 
-###tesing region with parametric appraoch first
+max.z <- max(data$R)
 
-setting =4
-threshold=0.7
-parallel.num=1
-set.seed(parallel.num*100)
+p.5 = ggplot(data.sub, aes(W1, W2, fill= R)) + 
+  geom_tile() + scale_fill_gradient(low="yellow", high="red", limits = c(min.z,max.z)) + xlab("W1") + ylab("W2") + labs(fill = expression(paste(R[S], "(W)",sep="")), title = expression("Setting 1, Estimated R", paste(R[S], "(W)",sep="")))
 
-outputfile = c()
-pfile = c()
-for (i in 1:num.sim) {
-
-data.temp = gen.data(n=n, setting =setting)
-  func.output <- complex.heterogeneity(y = data.temp$Y,
-                                       s = data.temp$S,
-                                       a = data.temp$A,
-                                       W.mat = matrix(cbind(data.temp$W1, data.temp$W2), ncol = 2),
-                                       type = "model",
-                                       variance = TRUE,
-                                       test = TRUE,
-                                       W.grid = w1w2.grid, h.0=1,h.1=1,h.3=1, threshold=threshold)
-  outputfile <- rbind(outputfile,func.output$return.grid)
-  pfile = rbind(pfile, func.output$pval)
+# adjust p values
+pval.adj <- rep(NA, 100)
+ranks <- rank(return.grid$pval.threshold.two.step, ties.method = "last")
+p.m.over.k <- return.grid$pval.threshold.two.step * length(return.grid$pval.threshold.two.step) / ranks
+for (r in 1:length(ranks)) {
+  tmp.rank <- ranks[r]
+  pval.adj[r] <- min(1, min(p.m.over.k[ranks >= tmp.rank]))
 }
+return.grid$pval.adj = pval.adj
+data.sub$flag = as.factor(1*(return.grid$pval.adj<0.05))
 
-setting.parametric <- empty.sim
+p.6 = ggplot(data.sub, aes(W1, W2, fill = flag)) + geom_tile()+ scale_fill_manual(breaks = levels(as.factor(data.sub$flag)), values = c("light grey","red"), labels = c("Not in region", "In region")) + labs(fill = paste("R > ",threshold,sep=""), title = paste("Setting 1, Confidence Region R > ", threshold,sep=""))
 
-
-#very important
-each.rows = grid.size*grid.size
-truth = get.truth(setting =setting, grid = cbind(outputfile[1:each.rows,1], outputfile[1:each.rows,2]))
-
-for(i in 1:100) {
-	sub.outputfile = outputfile[((i-1)*each.rows + 1):((i-1)*each.rows + each.rows),]
-	results.temp = sub.outputfile
-
-  results.temp$delta.true <- truth$delta
-  results.temp$delta.s.true <- truth$delta.s
-  results.temp$R.s.true <- truth$R
-
-  setting.parametric$delta[i,] <- results.temp$delta
-  setting.parametric$delta.s[i,] <- results.temp$delta.s
-  setting.parametric$R.s[i,] <- results.temp$R.s
-  setting.parametric$delta.bias[i,] <- results.temp$delta - results.temp$delta.true
-  setting.parametric$delta.s.bias[i,] <- results.temp$delta.s - results.temp$delta.s.true
-  setting.parametric$R.s.bias[i,] <- results.temp$R.s - results.temp$R.s.true
-  setting.parametric$delta.var[i,] <- results.temp$delta.var
-  setting.parametric$delta.s.var[i,] <- results.temp$delta.s.var
-  setting.parametric$R.s.var[i,] <- results.temp$R.s.var
-  setting.parametric$R.s.lower[i,] <- results.temp$R.s.lower
-  setting.parametric$R.s.upper[i,] <- results.temp$R.s.upper
-   setting.parametric$delta.lower[i,] <- results.temp$delta.lower
-  setting.parametric$delta.upper[i,] <- results.temp$delta.upper
- setting.parametric$delta.s.lower[i,] <- results.temp$delta.s.lower
-  setting.parametric$delta.s.upper[i,] <- results.temp$delta.s.upper
-  setting.parametric$pval.threshold[i,] <- results.temp$pval.threshold
-
-
-}
-
-apply(setting.parametric$pval.threshold, 2, function(x) mean(x<0.05))
-#inflated ok, that is what we expected
-bh.p = c()
-for(jj in 1:dim(setting.parametric$pval.threshold)[1]){
-	data.sub = cbind(c(1:dim(setting.parametric$pval.threshold)[2]), t(setting.parametric$pval.threshold[jj,]))
-	data.new = data.sub[order(data.sub[,2]),]
-	new.reject = cbind(data.new,1*(data.new[,2] <= c(1:length(data.sub[,2]))/16*0.05))
-	bh.p = rbind(bh.p, t(new.reject[order(new.reject[,1]),3]))
-}
-apply(bh.p, 2, mean)
-#it works!!s
-#so when it rejects, it is saying it IS in the region
-#so when I look at setting 4 and threshold = 0.77, that is the type 1 error because it is on the boundary of the null. To look at power, let's move threshold to 0.7
-
-#this is setting 4, threshold is 0.77
-  X1   X2   X3   X4   X5   X6   X7   X8   X9  X10  X11  X12  X13  X14  X15  X16 
-0.05 0.05 0.05 0.05 0.06 0.05 0.06 0.07 0.06 0.05 0.06 0.05 0.06 0.05 0.06 0.07
+# two step
+grid.arrange(p.1,p.2,p.5,p.6, ncol = 2)
