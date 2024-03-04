@@ -373,29 +373,31 @@ w2.grd <- seq(quantile(w2.large, 0.2), quantile(w2.large, 0.8), length = grid.si
 w1w2.grid <- matrix(cbind(w1.grd, w2.grd),ncol=2)
 	colnames(w1w2.grid) <- c("W1", "w2")
 
-if(setting ==2){
-	h.0=   0.1726482
-	h.1 =  0.1818023
-	h.3 = 0.3461025*(n^(-0.01)) #undersmooth this one only
-}
-
+# bandwidths come from opt.bw.fun.R code
 if(setting ==1){
-	h.0=   1.292377*(n^(-0.05))
-	h.1 = 1.198731*(n^(-0.05))
-	h.3 = 0.3752841*(n^(-0.05)) 
+	 h.0=   1.299992*(n^-0.05)
+	 h.1 = 1.309801*(n^-0.05)
+	 h.3 = 0.3358425*(n^-0.25) 
 }
-
-if(setting ==4){
-	h.0=    0.4805655*1.5 
-	h.1 = 0.4014512 *1.5
-	h.3 =  0.1294852*(n^(-0.1)) 
+	
+if(setting ==2){
+	h.0= 0.182208*1.5
+	h.1 = 0.1734609*1.5
+	h.3 = 0.2384773
 }
 
 if(setting ==3){
-	h.0=    17.55111 *(n^(-0.05))
-	h.1 = 15.31706*(n^(-0.05))
-	h.3 = 0.08621875 *(n^(-0.05))
+  h.0 = 16.67387*(n^-0.2)
+  h.1 = 17.07587*(n^-0.2)
+  h.3 = 0.09351131*(n^-0.25)
 }
+	
+if(setting ==4){
+	h.0 = 0.4955257*1.5
+	h.1 = 0.4750566*1.5
+	h.3 = 0.0906088*(n^-0.1)
+}
+
 
 #THIS IS WHAT MAKES EACH PARALLEL VERSION DIFFERENT
 set.seed(parallel.num*100)
