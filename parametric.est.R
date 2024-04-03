@@ -8,8 +8,9 @@
 #'
 #' @examples
 parametric.est <- function(data.control, data.treat, W.grid.expand) {
-  control.model <- lm(Y ~ ., data = data.control)
+   control.model <- lm(Y ~ ., data = data.control)
   treatment.model <- lm(Y ~ ., data = data.treat)
+
   alpha_1 <- mean(data.treat$S)
   alpha_0 <- mean(data.control$S)
 

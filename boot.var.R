@@ -8,7 +8,7 @@
 #' @return bootsrapped variance estimates for delta, delta.s, and R.s
 #'
 #' @examples
-boot.var <- function(data.control, data.treat, W.grid.expand, type, test=FALSE, data.all = NULL, num.cov=NULL, results.for.test = NULL, threshold,h.0,h.1,h.3) {
+boot.var <- function(data.control, data.treat, W.grid.expand, type, test=FALSE, data.all = NULL, num.cov=NULL, results.for.test = NULL, threshold) {
   num.boot <- 200
   boot.delta.est <- data.frame(matrix(nrow = nrow(W.grid.expand), ncol = num.boot))
   boot.delta.s.est <- data.frame(matrix(nrow = nrow(W.grid.expand), ncol = num.boot))
@@ -22,7 +22,7 @@ boot.var <- function(data.control, data.treat, W.grid.expand, type, test=FALSE, 
   boot.R.d.est.two.step <- data.frame(matrix(nrow = nrow(W.grid.expand), ncol = num.boot))
 
   for (j in 1:num.boot) {
-      boot.data.control <- data.control[sample(1:nrow(data.control), nrow(data.control), replace = TRUE),]
+  		boot.data.control <- data.control[sample(1:nrow(data.control), nrow(data.control), replace = TRUE),]
       boot.data.treat <- data.treat[sample(1:nrow(data.treat), nrow(data.treat), replace = TRUE),]
       if (type == "model") {
         boot.estimate <- parametric.est(boot.data.control, boot.data.treat, W.grid.expand)
@@ -31,7 +31,7 @@ boot.var <- function(data.control, data.treat, W.grid.expand, type, test=FALSE, 
       	boot.R.s.est[,j] <- boot.estimate$R.s
          }
       if (type == "two step") {
-        boot.estimate.two.step <- two.step.est(boot.data.control, boot.data.treat, W.grid.expand,h.0=h.0,h.1=h.1,h.3=h.3)
+        boot.estimate.two.step <- two.step.est(boot.data.control, boot.data.treat, W.grid.expand)
         boot.delta.est.two.step[,j] <- boot.estimate.two.step$delta.two.step
       	boot.delta.s.est.two.step[,j] <- boot.estimate.two.step$delta.s.two.step
       	boot.R.s.est.two.step[,j] <- boot.estimate.two.step$R.s.two.step
@@ -42,7 +42,7 @@ boot.var <- function(data.control, data.treat, W.grid.expand, type, test=FALSE, 
       	boot.delta.s.est[,j] <- boot.estimate$delta.s
       	boot.R.s.est[,j] <- boot.estimate$R.s
 
-      	boot.estimate.two.step <- two.step.est(boot.data.control, boot.data.treat, W.grid.expand,h.0=h.0,h.1=h.1,h.3=h.3)
+      	boot.estimate.two.step <- two.step.est(boot.data.control, boot.data.treat, W.grid.expand)
       	  	boot.delta.est.two.step[,j] <- boot.estimate.two.step$delta.two.step
       	boot.delta.s.est.two.step[,j] <- boot.estimate.two.step$delta.s.two.step
       	boot.R.s.est.two.step[,j] <- boot.estimate.two.step$R.s.two.step
@@ -91,6 +91,7 @@ apply(as.matrix(boot.R.s.est.two.step), 1, function(x) mean(x<threshold)))
   if(!test) {return(list("my.grid"=my.grid))}
   if(test) {
   	pval=c()
+  	band.critical = c()
   	if(type == "model" | type == "both") {
   		pval = het.test(data.all, num.cov)
   		R.d.var = apply(as.matrix(boot.R.d.est), 1, sd)^2
@@ -102,6 +103,8 @@ apply(as.matrix(boot.R.s.est.two.step), 1, function(x) mean(x<threshold)))
 		dist = apply(undernull, 1, function(x) max(abs(x)))
 		print(paste("critical value, parametric:", quantile(dist, 0.95)))
 	    pval = c(pval,mean(dist >= t.statistic))
+	    mad.r = apply(as.matrix(boot.R.s.est), 1, mad)
+	    band.critical = c(band.critical, quantile(apply(abs(boot.R.s.est-results.for.test$R.s)/mad.r, 2, max), 0.95))
 	    
 	 }
    	if(type == "two step" | type == "both") {
@@ -115,11 +118,14 @@ apply(as.matrix(boot.R.s.est.two.step), 1, function(x) mean(x<threshold)))
 		aa.two.step = cor(t(boot.R.d.est.two.step))
 		undernull = rmvnorm(1000, rep(0, length(results.for.test$R.s.two.step)), aa.two.step)
 		dist.two.step = apply(undernull, 1, function(x) max(abs(x)))
-		print(paste("critical value, parametric:", quantile(dist.two.step, 0.95)))
+		print(paste("critical value, two-stage omnibus:", quantile(dist.two.step, 0.95)))
 	    pval = c(pval,mean(dist.two.step >= t.statistic))
-
-	    }}
-  	return(list("my.grid" = my.grid, "pval" = pval))
+	    mad.r = apply(as.matrix(boot.R.s.est.two.step), 1, mad)
+	    band.critical = c(band.critical, quantile(apply(abs(boot.R.s.est.two.step-results.for.test$R.s.two.step)/mad.r, 2, max), 0.95))
+	    }
+		    }
+	    
+  	return(list("my.grid" = my.grid, "pval" = pval, "band.critical"=band.critical))
   	}
   
   
