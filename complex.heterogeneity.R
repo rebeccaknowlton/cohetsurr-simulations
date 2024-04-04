@@ -13,7 +13,7 @@
 #' @export
 #'
 #' @examples
-complex.heterogeneity <- function(y, s, a, W.mat, type = "model", variance = FALSE, test = FALSE, W.grid = NULL, grid.size = 4, threshold, h.0,h.1,h.3) {
+complex.heterogeneity <- function(y, s, a, W.mat, type = "model", variance = FALSE, test = FALSE, W.grid = NULL, grid.size = 4, threshold) {
   # create dataframe for control and treat
   W.mat.control <- W.mat[a==0,]
   W.mat.treat <- W.mat[a==1,]
@@ -46,18 +46,18 @@ complex.heterogeneity <- function(y, s, a, W.mat, type = "model", variance = FAL
     return.grid = return.grid.p
   }
   if (type == "two step") {
-    return.grid.t <- two.step.est(data.control, data.treat, W.grid.expand,h.0=h.0,h.1=h.1,h.3=h.3)
+    return.grid.t <- two.step.est(data.control, data.treat, W.grid.expand)
     return.grid = return.grid.t
   }
   if (type == "both") {
     return.grid.p <- parametric.est(data.control, data.treat, W.grid.expand)
-    return.grid.t <- two.step.est(data.control, data.treat, W.grid.expand,h.0=h.0,h.1=h.1,h.3=h.3)
+    return.grid.t <- two.step.est(data.control, data.treat, W.grid.expand)
     return.grid = cbind(return.grid.p,return.grid.t)
   }
   if (variance == TRUE | test == TRUE) {
-  	boot.object = boot.var(data.control, data.treat, W.grid.expand, type,test=test, data.all = data.all, num.cov = num.cov, results.for.test = return.grid, threshold = threshold,h.0=h.0,h.1=h.1,h.3=h.3)
+  	boot.object = boot.var(data.control, data.treat, W.grid.expand, type,test=test, data.all = data.all, num.cov = num.cov, results.for.test = return.grid, threshold = threshold)
     return.grid <- cbind(return.grid, boot.object$my.grid)
-    return.grid <- list(return.grid = return.grid, pval = boot.object$pval)
+    return.grid <- list(return.grid = return.grid, pval = boot.object$pval, band.critical = boot.object$band.critical)
   }
   else {return.grid <- list(return.grid = return.grid)}
   return(return.grid)
