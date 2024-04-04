@@ -1,4 +1,4 @@
-parallel.num = 12
+parallel.num = 18
 
-source("cluster_1.R")
+source("cluster_2.R")
 source("sims_complex_master_032924.R")
