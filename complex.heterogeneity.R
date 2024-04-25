@@ -1,19 +1,14 @@
-#' complex.heterogeneity
-#'
-#' @param y true outcome of interest
-#' @param s potential surrogate marker
-#' @param a binary treatment assignment indicator
-#' @param W matrix of covariates of interest
-#' @param type either "model" or "two step"
-#' @param variance TRUE if you want to bootstrap variance estimates
-#' @param W.grid optional grid of W values to get point estimates for
-#' @param grid.size optional size of the auto-created W.grid
-#'
-#' @return a grid containing the W.grid values, the point estimates of delta, delta.s, and R.s, and their associated variance estimates if requested
-#' @export
-#'
-#' @examples
-complex.heterogeneity <- function(y, s, a, W.mat, type = "model", variance = FALSE, test = FALSE, W.grid = NULL, grid.size = 4, threshold, h.0,h.1,h.3) {
+complex.heterogeneity <-
+function(y, s, a, W.mat, type = "model", variance = FALSE, test = FALSE, W.grid = NULL, grid.size = 4, threshold = NULL) {
+  if(ncol(W.mat) < 2) {stop("If only using one baseline covariate, see the package hetsurr instead")}
+  w.numeric.check <- 0
+  w.idx.drop <- c()
+  for (w in 1:ncol(W.mat)) {
+    if(inherits(W.mat[1,w], "character") | inherits(W.mat[1,w], "factor")) {w.numeric.check <- 1}
+    if(is.null(W.grid) & all(W.mat[,w] %in% 0:1)) {w.idx.drop <- c(w.idx.drop, w)}
+  }
+  if(w.numeric.check == 1) {stop("W.mat should only contain numeric or binary variables. For categorical variables, user must input data as binary indicators.")}
+  
   # create dataframe for control and treat
   W.mat.control <- W.mat[a==0,]
   W.mat.treat <- W.mat[a==1,]
@@ -21,7 +16,9 @@ complex.heterogeneity <- function(y, s, a, W.mat, type = "model", variance = FAL
   covariates.treat <- split(W.mat.treat, rep(1:ncol(W.mat.treat), each = nrow(W.mat.treat)))
   data.control <- cbind(data.frame(Y = y[a==0], S = s[a==0]), covariates.control)
   data.treat <- cbind(data.frame(Y = y[a==1], S = s[a==1]), covariates.treat)
-
+  if(ncol(W.mat) > min(nrow(data.control), nrow(data.treat))) {warning("The dimension of W is greater than the sample size; method may not perform well")}
+  if((min(nrow(data.control), nrow(data.treat)) < 200) & (type != "model")) {warning("Small sample size; kernel smoothing may not perform well")}
+  
   #create dataframe for combined data
   covariates.all <- split(W.mat, rep(1:ncol(W.mat), each = nrow(W.mat)))
   num.cov <- length(covariates.all)
@@ -40,25 +37,38 @@ complex.heterogeneity <- function(y, s, a, W.mat, type = "model", variance = FAL
 
   # expand W.grid
   W.grid.expand <- expand.grid(split(W.grid, rep(1:ncol(W.grid), each = nrow(W.grid))))
+  W.grid.expand <- na.omit(W.grid.expand)
+  for (w in w.idx.drop) {
+    W.grid.expand <- W.grid.expand[which((round(W.grid.expand[,w],2) == 0.00) | (round(W.grid.expand[,w],2) == 1.00)),]
+  }
+  rownames(W.grid.expand) <- NULL
 
   if (type == "model") {
     return.grid.p <- parametric.est(data.control, data.treat, W.grid.expand)
     return.grid = return.grid.p
   }
   if (type == "two step") {
-    return.grid.t <- two.step.est(data.control, data.treat, W.grid.expand,h.0=h.0,h.1=h.1,h.3=h.3)
-    return.grid = return.grid.t
+    return.grid.t <- two.step.est(data.control, data.treat, W.grid.expand)
+    if(return.grid.t$extrapol.warn == 1) {warning("Extrapolation used in kernel smoothing")}
+    return.grid = return.grid.t$my.grid
   }
   if (type == "both") {
     return.grid.p <- parametric.est(data.control, data.treat, W.grid.expand)
-    return.grid.t <- two.step.est(data.control, data.treat, W.grid.expand,h.0=h.0,h.1=h.1,h.3=h.3)
-    return.grid = cbind(return.grid.p,return.grid.t)
+    return.grid.t <- two.step.est(data.control, data.treat, W.grid.expand)
+    if(return.grid.t$extrapol.warn == 1) {warning("Extrapolation used in kernel smoothing")}
+    return.grid = cbind(return.grid.p,return.grid.t$my.grid)
   }
   if (variance == TRUE | test == TRUE) {
-  	boot.object = boot.var(data.control, data.treat, W.grid.expand, type,test=test, data.all = data.all, num.cov = num.cov, results.for.test = return.grid, threshold = threshold,h.0=h.0,h.1=h.1,h.3=h.3)
+  	boot.object = boot.var(data.control, data.treat, W.grid.expand, type,test=test, data.all = data.all, num.cov = num.cov, results.for.test = return.grid, threshold = threshold)
     return.grid <- cbind(return.grid, boot.object$my.grid)
+    if(!is.null(colnames(W.mat))) {colnames(return.grid)[1:num.cov] <- colnames(W.mat)}
+    else if (!is.null(colnames(W.grid))) {colnames(return.grid)[1:num.cov] <- colnames(W.grid)}
     return.grid <- list(return.grid = return.grid, pval = boot.object$pval)
   }
-  else {return.grid <- list(return.grid = return.grid)}
+  else {
+    if(!is.null(colnames(W.mat))) {colnames(return.grid)[1:num.cov] <- colnames(W.mat)}
+    else if (!is.null(colnames(W.grid))) {colnames(return.grid)[1:num.cov] <- colnames(W.grid)}
+    return.grid <- list(return.grid = return.grid)
+  }
   return(return.grid)
 }
