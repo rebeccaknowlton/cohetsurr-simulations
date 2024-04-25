@@ -1,5 +1,5 @@
 
-setwd("C:/Users/rkkno/Documents/University of Texas at Austin/Complex Heterogeneity/cohetsurr/320 data")
+setwd("C:/Users/rkkno/Documents/University of Texas at Austin/Complex heterogeneity/Simulation files 4-24-24/320 data")
 library(Rsurrogate)
 library(ggplot2)
 library(tidyverse)
@@ -109,29 +109,9 @@ ggplot(plot.data.long, aes(x = W1, y = R.estimate, color=method, group = method)
   coord_cartesian(ylim = c(-0.1, 1.2))
 
 
-# ID a region
-
-# adjusted parametric
-pval.adj.p <- rep(NA, nrow(aids.results))
-data.sub <- aids.results$pval.threshold
-ranks <- rank(data.sub, ties.method = "last")
-p.m.over.k <- data.sub * length(data.sub) / ranks
-for(r in 1:length(ranks)) {
-  tmp.rank <- ranks[r]
-  pval.adj.p[r] <- min(1, min(p.m.over.k[ranks >= tmp.rank]))
-}
-pval.adj.p < 0.05
-  
-# two step
-pval.adj.ts <- rep(NA, nrow(aids.results))
-data.sub <- aids.results$pval.threshold.two.step
-ranks <- rank(data.sub, ties.method = "last")
-p.m.over.k <- data.sub * length(data.sub) / ranks
-for(r in 1:length(ranks)) {
-  tmp.rank <- ranks[r]
-  pval.adj.ts[r] <- min(1, min(p.m.over.k[ranks >= tmp.rank]))
-}
-pval.adj.ts < 0.05
+# ID a region - UPDATE
+mean(aids.results$threshold.flag)
+mean(aids.results$threshold.flag.two.step)
 
 # make tables
 table.data.model <- data.frame("CD4.Base" = aids.results[,1],
