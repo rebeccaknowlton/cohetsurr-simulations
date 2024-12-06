@@ -1,5 +1,3 @@
-
-setwd("C:/Users/rkkno/Documents/University of Texas at Austin/Complex heterogeneity/Simulation files 4-24-24/320 data")
 library(Rsurrogate)
 library(ggplot2)
 library(tidyverse)
@@ -163,26 +161,19 @@ control.data <- aids.data[aids.data$TREAT==1,]
 # overall plot
 ggplot(treatment.data, aes(CD4CHANGE, RNACHANGE)) + geom_point() + geom_smooth()
 
-w1.breaks <- quantile(treatment.data$CD4BASE, c(0.25,0.5,0.75))
-w2.breaks <- quantile(treatment.data$AGE, c(0.25,0.5,0.75))
+w1.breaks <- quantile(treatment.data$CD4BASE, c(0.33,0.67))
+w2.breaks <- quantile(treatment.data$AGE, c(0.33,0.67))
 
 # want to save idx that define subgroups of patients who are between these thresholds
 idx1 <- which((treatment.data$CD4BASE < w1.breaks[1]) & (treatment.data$AGE < w2.breaks[1]))
 idx2 <- which((treatment.data$CD4BASE < w1.breaks[1]) & (treatment.data$AGE >= w2.breaks[1]) & (treatment.data$AGE < w2.breaks[2]))
-idx3 <- which((treatment.data$CD4BASE < w1.breaks[1]) & (treatment.data$AGE >= w2.breaks[2]) & (treatment.data$AGE < w2.breaks[3]))
-idx4 <- which((treatment.data$CD4BASE < w1.breaks[1]) & (treatment.data$AGE >= w2.breaks[3]))
-idx5 <- which((treatment.data$CD4BASE >= w1.breaks[1]) & (treatment.data$CD4BASE < w1.breaks[2]) & (treatment.data$AGE < w2.breaks[1]))
-idx6 <- which((treatment.data$CD4BASE >= w1.breaks[1]) & (treatment.data$CD4BASE < w1.breaks[2]) & (treatment.data$AGE >= w2.breaks[1]) & (treatment.data$AGE < w2.breaks[2]))
-idx7 <- which((treatment.data$CD4BASE >= w1.breaks[1]) & (treatment.data$CD4BASE < w1.breaks[2]) & (treatment.data$AGE >= w2.breaks[2]) & (treatment.data$AGE < w2.breaks[3]))
-idx8 <- which((treatment.data$CD4BASE >= w1.breaks[1]) & (treatment.data$CD4BASE < w1.breaks[2]) & (treatment.data$AGE >= w2.breaks[3]))
-idx9 <- which((treatment.data$CD4BASE >= w1.breaks[2]) & (treatment.data$CD4BASE < w1.breaks[3]) & (treatment.data$AGE < w2.breaks[1]))
-idx10 <- which((treatment.data$CD4BASE >= w1.breaks[2]) & (treatment.data$CD4BASE < w1.breaks[3]) & (treatment.data$AGE >= w2.breaks[1]) & (treatment.data$AGE < w2.breaks[2]))
-idx11 <- which((treatment.data$CD4BASE >= w1.breaks[2]) & (treatment.data$CD4BASE < w1.breaks[3]) & (treatment.data$AGE >= w2.breaks[2]) & (treatment.data$AGE < w2.breaks[3]))
-idx12 <- which((treatment.data$CD4BASE >= w1.breaks[2]) & (treatment.data$CD4BASE < w1.breaks[3]) & (treatment.data$AGE >= w2.breaks[3]))
-idx13 <- which((treatment.data$CD4BASE >= w1.breaks[3]) & (treatment.data$AGE < w2.breaks[1]))
-idx14 <- which((treatment.data$CD4BASE >= w1.breaks[3]) & (treatment.data$AGE >= w2.breaks[1]) & (treatment.data$AGE < w2.breaks[2]))
-idx15 <- which((treatment.data$CD4BASE >= w1.breaks[3]) & (treatment.data$AGE >= w2.breaks[2]) & (treatment.data$AGE < w2.breaks[3]))
-idx16 <- which((treatment.data$CD4BASE >= w1.breaks[3]) & (treatment.data$AGE >= w2.breaks[3]))
+idx3 <- which((treatment.data$CD4BASE < w1.breaks[1]) & (treatment.data$AGE >= w2.breaks[2]))
+idx4 <- which((treatment.data$CD4BASE >= w1.breaks[1]) & (treatment.data$CD4BASE < w1.breaks[2]) & (treatment.data$AGE < w2.breaks[1]))
+idx5 <- which((treatment.data$CD4BASE >= w1.breaks[1]) & (treatment.data$CD4BASE < w1.breaks[2]) & (treatment.data$AGE >= w2.breaks[1]) & (treatment.data$AGE < w2.breaks[2]))
+idx6 <- which((treatment.data$CD4BASE >= w1.breaks[1]) & (treatment.data$CD4BASE < w1.breaks[2]) & (treatment.data$AGE >= w2.breaks[2]))
+idx7 <- which((treatment.data$CD4BASE >= w1.breaks[2]) & (treatment.data$AGE < w2.breaks[1]))
+idx8 <- which((treatment.data$CD4BASE >= w1.breaks[2]) & (treatment.data$AGE >= w2.breaks[1]) & (treatment.data$AGE < w2.breaks[2]))
+idx9 <- which((treatment.data$CD4BASE >= w1.breaks[2])  & (treatment.data$AGE >= w2.breaks[2]))
 
 length(idx1)
 length(idx2)
@@ -193,52 +184,34 @@ length(idx6)
 length(idx7)
 length(idx8)
 length(idx9)
-length(idx10)
-length(idx11)
-length(idx12)
-length(idx13)
-length(idx14)
-length(idx15)
-length(idx16)
 
 # subgroup plots
-ggplot(treatment.data[idx1,], aes(CD4CHANGE, RNACHANGE)) + geom_point() + geom_smooth() # slightly violated
-ggplot(treatment.data[idx2,], aes(CD4CHANGE, RNACHANGE)) + geom_point() + geom_smooth()
-ggplot(treatment.data[idx3,], aes(CD4CHANGE, RNACHANGE)) + geom_point() + geom_smooth()
-ggplot(treatment.data[idx4,], aes(CD4CHANGE, RNACHANGE)) + geom_point() + geom_smooth()
-ggplot(treatment.data[idx5,], aes(CD4CHANGE, RNACHANGE)) + geom_point() + geom_smooth() # slightly violated
-ggplot(treatment.data[idx6,], aes(CD4CHANGE, RNACHANGE)) + geom_point() + geom_smooth()
-ggplot(treatment.data[idx7,], aes(CD4CHANGE, RNACHANGE)) + geom_point() + geom_smooth()
-ggplot(treatment.data[idx8,], aes(CD4CHANGE, RNACHANGE)) + geom_point() + geom_smooth()
-ggplot(treatment.data[idx9,], aes(CD4CHANGE, RNACHANGE)) + geom_point() + geom_smooth() # slightly violated
+p1 = ggplot(treatment.data[idx1,], aes(CD4CHANGE, RNACHANGE)) + geom_point() + geom_smooth() + labs(title = "Region 1")
+p2 = ggplot(treatment.data[idx2,], aes(CD4CHANGE, RNACHANGE)) + geom_point() + geom_smooth() + labs(title = "Region 2")
+p3 = ggplot(treatment.data[idx3,], aes(CD4CHANGE, RNACHANGE)) + geom_point() + geom_smooth() + labs(title = "Region 3")
+p4 = ggplot(treatment.data[idx4,], aes(CD4CHANGE, RNACHANGE)) + geom_point() + geom_smooth() + labs(title = "Region 4")
+p5 = ggplot(treatment.data[idx5,], aes(CD4CHANGE, RNACHANGE)) + geom_point() + geom_smooth() + labs(title = "Region 5")
+p6 = ggplot(treatment.data[idx6,], aes(CD4CHANGE, RNACHANGE)) + geom_point() + geom_smooth() + labs(title = "Region 6")
+p7 = ggplot(treatment.data[idx7,], aes(CD4CHANGE, RNACHANGE)) + geom_point() + geom_smooth() + labs(title = "Region 7")
+p8 = ggplot(treatment.data[idx8,], aes(CD4CHANGE, RNACHANGE)) + geom_point() + geom_smooth()+ labs(title = "Region 8")
+p9 = ggplot(treatment.data[idx9,], aes(CD4CHANGE, RNACHANGE)) + geom_point() + geom_smooth() + labs(title = "Region 9")
 
-ggplot(treatment.data[idx10,], aes(CD4CHANGE, RNACHANGE)) + geom_point() + geom_smooth()
-ggplot(treatment.data[idx11,], aes(CD4CHANGE, RNACHANGE)) + geom_point() + geom_smooth()
-ggplot(treatment.data[idx12,], aes(CD4CHANGE, RNACHANGE)) + geom_point() + geom_smooth()
-ggplot(treatment.data[idx13,], aes(CD4CHANGE, RNACHANGE)) + geom_point() + geom_smooth()
-ggplot(treatment.data[idx14,], aes(CD4CHANGE, RNACHANGE)) + geom_point() + geom_smooth()
-ggplot(treatment.data[idx15,], aes(CD4CHANGE, RNACHANGE)) + geom_point() + geom_smooth() # slightly violated
-ggplot(treatment.data[idx16,], aes(CD4CHANGE, RNACHANGE)) + geom_point() + geom_smooth() # slightly violated
+library(gridExtra)
+grid.arrange(p1, p2, p3,p4, p5, p6,p7, p8, p9,ncol = 3 )
+
 
 ### Assumption (C2): P(s1 > s | w) >= P(s0 > s | w) ###
 
-# overall plot (plot S against W1 = CD4BASE)
-ggplot(aids.data, aes(CD4BASE, CD4CHANGE, color = factor(TREAT))) + geom_smooth() + geom_point(alpha= 0.3)
-# seems met
-
-#split into different w2 subgroups
-w2.breaks <- quantile(aids.data$AGE, c(0.25,0.5,0.75))
-
-idx1 <- which(aids.data$AGE < w2.breaks[1])
-idx2 <- which((aids.data$AGE >= w2.breaks[1]) & (aids.data$AGE < w2.breaks[2]))
-idx3 <- which((aids.data$AGE >= w2.breaks[2]) & (aids.data$AGE < w2.breaks[3]))
-idx4 <- which(aids.data$AGE >= w2.breaks[3])
-
-# plots for subgroups -- generally condition still seems met
-ggplot(aids.data[idx1,], aes(CD4BASE, CD4CHANGE, color = factor(TREAT))) + geom_smooth() + geom_point()
-ggplot(aids.data[idx2,], aes(CD4BASE, CD4CHANGE, color = factor(TREAT))) + geom_smooth() + geom_point()
-ggplot(aids.data[idx3,], aes(CD4BASE, CD4CHANGE, color = factor(TREAT))) + geom_smooth() + geom_point()
-ggplot(aids.data[idx4,], aes(CD4BASE, CD4CHANGE, color = factor(TREAT))) + geom_smooth() + geom_point()
+p1 = ggplot(aids.data[idx1,], aes(x = CD4CHANGE, color = factor(TREAT))) + stat_ecdf(geom = "step", aes(y = 1 - ..y..), size = 1)  + theme(legend.position = "none") +labs(y = "1 - Empirical CDF", title = "Region 1" ) 
+p2 = ggplot(aids.data[idx2,], aes(x = CD4CHANGE, color = factor(TREAT))) + stat_ecdf(geom = "step", aes(y = 1 - ..y..), size = 1)  + theme(legend.position = "none") +labs(y = "1 - Empirical CDF", title = "Region 2" ) 
+p3 = ggplot(aids.data[idx3,], aes(x = CD4CHANGE, color = factor(TREAT))) + stat_ecdf(geom = "step", aes(y = 1 - ..y..), size = 1)  + theme(legend.position = "none") +labs(y = "1 - Empirical CDF", title = "Region 3" ) 
+p4 = ggplot(aids.data[idx4,], aes(x = CD4CHANGE, color = factor(TREAT))) + stat_ecdf(geom = "step", aes(y = 1 - ..y..), size = 1)  + theme(legend.position = "none") +labs(y = "1 - Empirical CDF", title = "Region 4" ) 
+p5 = ggplot(aids.data[idx5,], aes(x = CD4CHANGE, color = factor(TREAT))) + stat_ecdf(geom = "step", aes(y = 1 - ..y..), size = 1)  + theme(legend.position = "none") +labs(y = "1 - Empirical CDF", title = "Region 5" ) 
+p6 = ggplot(aids.data[idx6,], aes(x = CD4CHANGE, color = factor(TREAT))) + stat_ecdf(geom = "step", aes(y = 1 - ..y..), size = 1)  + theme(legend.position = "none") +labs(y = "1 - Empirical CDF", title = "Region 6" ) 
+p7 = ggplot(aids.data[idx7,], aes(x = CD4CHANGE, color = factor(TREAT))) + stat_ecdf(geom = "step", aes(y = 1 - ..y..), size = 1)  + theme(legend.position = "none") +labs(y = "1 - Empirical CDF", title = "Region 7" ) 
+p8 = ggplot(aids.data[idx8,], aes(x = CD4CHANGE, color = factor(TREAT))) + stat_ecdf(geom = "step", aes(y = 1 - ..y..), size = 1)  + theme(legend.position = "none") +labs(y = "1 - Empirical CDF", title = "Region 8" ) 
+p9 = ggplot(aids.data[idx9,], aes(x = CD4CHANGE, color = factor(TREAT))) + stat_ecdf(geom = "step", aes(y = 1 - ..y..), size = 1)  + theme(legend.position = "none") +labs(y = "1 - Empirical CDF", title = "Region 9" ) 
+grid.arrange(p1, p2, p3,p4, p5, p6,p7, p8, p9,ncol = 3 )
 
 
 ### Assumption (C3): E(y1 | s, w) >= E(y0 | s, w) ###
@@ -246,45 +219,18 @@ ggplot(aids.data[idx4,], aes(CD4BASE, CD4CHANGE, color = factor(TREAT))) + geom_
 # overall plot
 ggplot(aids.data, aes(CD4CHANGE, RNACHANGE, color = factor(TREAT))) + geom_smooth() + geom_point()
 
-# split it into different covariate subgroups
-w1.breaks <- quantile(aids.data$CD4BASE, c(0.25,0.5,0.75))
-w2.breaks <- quantile(aids.data$AGE, c(0.25,0.5,0.75))
-
-# want to save idx that define subgroups of patients who are between these thresholds
-idx1 <- which((aids.data$CD4BASE < w1.breaks[1]) & (aids.data$AGE < w2.breaks[1]))
-idx2 <- which((aids.data$CD4BASE < w1.breaks[1]) & (aids.data$AGE >= w2.breaks[1]) & (aids.data$AGE < w2.breaks[2]))
-idx3 <- which((aids.data$CD4BASE < w1.breaks[1]) & (aids.data$AGE >= w2.breaks[2]) & (aids.data$AGE < w2.breaks[3]))
-idx4 <- which((aids.data$CD4BASE < w1.breaks[1]) & (aids.data$AGE >= w2.breaks[3]))
-idx5 <- which((aids.data$CD4BASE >= w1.breaks[1]) & (aids.data$CD4BASE < w1.breaks[2]) & (aids.data$AGE < w2.breaks[1]))
-idx6 <- which((aids.data$CD4BASE >= w1.breaks[1]) & (aids.data$CD4BASE < w1.breaks[2]) & (aids.data$AGE >= w2.breaks[1]) & (aids.data$AGE < w2.breaks[2]))
-idx7 <- which((aids.data$CD4BASE >= w1.breaks[1]) & (aids.data$CD4BASE < w1.breaks[2]) & (aids.data$AGE >= w2.breaks[2]) & (aids.data$AGE < w2.breaks[3]))
-idx8 <- which((aids.data$CD4BASE >= w1.breaks[1]) & (aids.data$CD4BASE < w1.breaks[2]) & (aids.data$AGE >= w2.breaks[3]))
-idx9 <- which((aids.data$CD4BASE >= w1.breaks[2]) & (aids.data$CD4BASE < w1.breaks[3]) & (aids.data$AGE < w2.breaks[1]))
-idx10 <- which((aids.data$CD4BASE >= w1.breaks[2]) & (aids.data$CD4BASE < w1.breaks[3]) & (aids.data$AGE >= w2.breaks[1]) & (aids.data$AGE < w2.breaks[2]))
-idx11 <- which((aids.data$CD4BASE >= w1.breaks[2]) & (aids.data$CD4BASE < w1.breaks[3]) & (aids.data$AGE >= w2.breaks[2]) & (aids.data$AGE < w2.breaks[3]))
-idx12 <- which((aids.data$CD4BASE >= w1.breaks[2]) & (aids.data$CD4BASE < w1.breaks[3]) & (aids.data$AGE >= w2.breaks[3]))
-idx13 <- which((aids.data$CD4BASE >= w1.breaks[3]) & (aids.data$AGE < w2.breaks[1]))
-idx14 <- which((aids.data$CD4BASE >= w1.breaks[3]) & (aids.data$AGE >= w2.breaks[1]) & (aids.data$AGE < w2.breaks[2]))
-idx15 <- which((aids.data$CD4BASE >= w1.breaks[3]) & (aids.data$AGE >= w2.breaks[2]) & (aids.data$AGE < w2.breaks[3]))
-idx16 <- which((aids.data$CD4BASE >= w1.breaks[3]) & (aids.data$AGE >= w2.breaks[3]))
-
 # plots for subgroups -- these all look reasonable
-ggplot(aids.data[idx1,], aes(CD4CHANGE, RNACHANGE, color = factor(TREAT))) + geom_smooth() + geom_point()
-ggplot(aids.data[idx2,], aes(CD4CHANGE, RNACHANGE, color = factor(TREAT))) + geom_smooth() + geom_point()
-ggplot(aids.data[idx3,], aes(CD4CHANGE, RNACHANGE, color = factor(TREAT))) + geom_smooth() + geom_point()
-ggplot(aids.data[idx4,], aes(CD4CHANGE, RNACHANGE, color = factor(TREAT))) + geom_smooth() + geom_point()
-ggplot(aids.data[idx5,], aes(CD4CHANGE, RNACHANGE, color = factor(TREAT))) + geom_smooth() + geom_point()
-ggplot(aids.data[idx6,], aes(CD4CHANGE, RNACHANGE, color = factor(TREAT))) + geom_smooth() + geom_point()
-ggplot(aids.data[idx7,], aes(CD4CHANGE, RNACHANGE, color = factor(TREAT))) + geom_smooth() + geom_point()
-ggplot(aids.data[idx8,], aes(CD4CHANGE, RNACHANGE, color = factor(TREAT))) + geom_smooth() + geom_point()
-ggplot(aids.data[idx9,], aes(CD4CHANGE, RNACHANGE, color = factor(TREAT))) + geom_smooth() + geom_point()
-ggplot(aids.data[idx10,], aes(CD4CHANGE, RNACHANGE, color = factor(TREAT))) + geom_smooth() + geom_point()
-ggplot(aids.data[idx11,], aes(CD4CHANGE, RNACHANGE, color = factor(TREAT))) + geom_smooth() + geom_point()
-ggplot(aids.data[idx12,], aes(CD4CHANGE, RNACHANGE, color = factor(TREAT))) + geom_smooth() + geom_point()
-ggplot(aids.data[idx13,], aes(CD4CHANGE, RNACHANGE, color = factor(TREAT))) + geom_smooth() + geom_point()
-ggplot(aids.data[idx14,], aes(CD4CHANGE, RNACHANGE, color = factor(TREAT))) + geom_smooth() + geom_point()
-ggplot(aids.data[idx15,], aes(CD4CHANGE, RNACHANGE, color = factor(TREAT))) + geom_smooth() + geom_point()
-ggplot(aids.data[idx16,], aes(CD4CHANGE, RNACHANGE, color = factor(TREAT))) + geom_smooth() + geom_point()
+p1 = ggplot(aids.data[idx1,], aes(CD4CHANGE, RNACHANGE, color = factor(TREAT))) + geom_smooth() + geom_point() + labs(title = "Region 1") + theme(legend.position = "none")
+p2 =ggplot(aids.data[idx2,], aes(CD4CHANGE, RNACHANGE, color = factor(TREAT))) + geom_smooth() + geom_point() + labs(title = "Region 2") + theme(legend.position = "none")
+p3 =ggplot(aids.data[idx3,], aes(CD4CHANGE, RNACHANGE, color = factor(TREAT))) + geom_smooth() + geom_point() + labs(title = "Region 3") + theme(legend.position = "none")
+p4 =ggplot(aids.data[idx4,], aes(CD4CHANGE, RNACHANGE, color = factor(TREAT))) + geom_smooth() + geom_point() + labs(title = "Region 4") + theme(legend.position = "none")
+p5 =ggplot(aids.data[idx5,], aes(CD4CHANGE, RNACHANGE, color = factor(TREAT))) + geom_smooth() + geom_point() + labs(title = "Region 5") + theme(legend.position = "none")
+p6 =ggplot(aids.data[idx6,], aes(CD4CHANGE, RNACHANGE, color = factor(TREAT))) + geom_smooth() + geom_point() + labs(title = "Region 6") + theme(legend.position = "none")
+p7 =ggplot(aids.data[idx7,], aes(CD4CHANGE, RNACHANGE, color = factor(TREAT))) + geom_smooth() + geom_point() + labs(title = "Region 7") + theme(legend.position = "none")
+p8 =ggplot(aids.data[idx8,], aes(CD4CHANGE, RNACHANGE, color = factor(TREAT))) + geom_smooth() + geom_point() + labs(title = "Region 8") + theme(legend.position = "none")
+p9 =ggplot(aids.data[idx9,], aes(CD4CHANGE, RNACHANGE, color = factor(TREAT))) + geom_smooth() + geom_point() + labs(title = "Region 9") + theme(legend.position = "none")
+
+grid.arrange(p1, p2, p3,p4, p5, p6,p7, p8, p9,ncol = 3 )
 
 ### Assumption (C4): s0 and s1 have the same support over a finite range ###
 
